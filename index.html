@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f4">
+  <title>Matchday — Resume analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <section id="auth-gate" class="auth-gate" aria-live="polite">
+    <div class="auth-card">
+      <a class="brand auth-brand" href="/" aria-label="Matchday home"><span class="brand-icon">M</span><span>matchday<span class="brand-dot">.</span></span></a>
+      <div class="auth-eyebrow">YOUR NEXT MOVE STARTS HERE</div>
+      <h1 id="auth-title">Welcome back.</h1>
+      <p class="auth-intro" id="auth-intro">Sign in to continue to your resume workspace.</p>
+      <div class="auth-notice" id="auth-notice">Connecting securely…</div>
+      <form id="auth-form" hidden>
+        <label for="auth-email">Email address</label>
+        <input id="auth-email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label for="auth-password">Password</label>
+        <input id="auth-password" type="password" autocomplete="current-password" required minlength="6" placeholder="At least 6 characters">
+        <div id="auth-error" class="auth-error" role="alert" hidden></div>
+        <button id="auth-submit" class="analyze-button auth-submit" type="submit"><span>Sign in</span><span class="button-arrow">↗</span></button>
+      </form>
+      <div id="auth-switch" class="auth-switch" hidden><span id="auth-switch-copy">New to Matchday?</span> <button id="auth-switch-button" type="button">Create an account</button></div>
+    </div>
+  </section>
+
+  <div class="shell" id="app-shell" hidden>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Matchday home"><span class="brand-icon">M</span><span>matchday<span class="brand-dot">.</span></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <a class="nav-item active" data-route="/" href="/"><span class="nav-icon">◈</span> Upload resume</a>
+      <a class="nav-item" data-route="/analysis" href="/analysis"><span class="nav-icon">◉</span> Match analysis</a>
+      <a class="nav-item" data-route="/tailored" href="/tailored"><span class="nav-icon">✳</span> Tailored resume</a>
+      <div class="side-bottom"><div class="secure-icon">✳</div><strong>Your data stays yours</strong><p>Resume and job text stays in this browser tab. The app does not save it on its server.</p><div class="side-version">MATCHDAY <span>·</span> GEMINI POWERED</div></div>
+    </aside>
+
+    <main class="main" id="analyze">
+      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> Resume analysis</div><div class="top-actions"><div class="top-pill"><span class="status-dot"></span> AI analysis</div><span id="account-email" class="account-email"></span><button id="sign-out" class="sign-out" type="button">Sign out</button></div></header>
+      <section class="app-page" id="upload-page">
+        <section class="intro"><div class="eyebrow"><span></span> STEP 1 OF 3 · YOUR NEXT MOVE STARTS HERE</div><h1>Find the fit.<br><em>Make your move.</em></h1><p class="lead">Upload your resume and a job description to see how your experience lines up with the role.</p></section>
+
+        <form id="analysis-form" class="workspace-grid">
+        <section class="form-card resume-card">
+          <div class="card-heading"><div class="step-number">01</div><div><h2>Your resume</h2><p>Share your experience so we can understand your strengths.</p></div></div>
+          <label class="dropzone" id="dropzone" for="resume-file">
+            <input type="file" id="resume-file" accept=".pdf,.txt,application/pdf,text/plain">
+            <span class="upload-icon">↑</span><strong id="file-title">Drop your resume here</strong><span id="file-subtitle">or <span class="browse">browse files</span></span><small>PDF or TXT · up to 8 MB</small>
+          </label>
+          <div class="divider"><span></span> OR PASTE YOUR RESUME <span></span></div>
+          <label class="visually-hidden" for="resume-text">Resume text</label>
+          <textarea id="resume-text" rows="8" placeholder="Paste your resume here…&#10;&#10;Include your experience, skills, education, and achievements."></textarea>
+          <div class="field-foot"><span id="resume-count">0 characters</span><button class="text-button" id="clear-resume" type="button">Clear</button></div>
+        </section>
+
+        <section class="form-card job-card">
+          <div class="card-heading"><div class="step-number">02</div><div><h2>The role</h2><p>Paste the job description you’re interested in.</p></div></div>
+          <label class="visually-hidden" for="job-description">Job description</label>
+          <textarea id="job-description" rows="15" placeholder="Paste the job description here…&#10;&#10;The more detail you include, the more useful your analysis will be."></textarea>
+          <div class="field-foot"><span id="job-count">0 characters</span><span class="field-hint">Company names are optional</span></div>
+        </section>
+
+        <div class="form-actions"><p><span class="lock">♧</span> Your resume is sent securely for analysis and not stored.</p><button class="analyze-button" id="analyze-button" type="submit"><span>Analyze my match</span><span class="button-arrow">↗</span></button></div>
+        </form>
+      </section>
+
+      <div class="error-banner" id="error-banner" role="alert" hidden></div>
+      <section class="app-page" id="analysis-page" hidden>
+        <div class="page-heading"><div class="eyebrow"><span></span> STEP 2 OF 3</div><h1>Your match<br><em>at a glance.</em></h1><p class="lead">A role-by-role look at where your experience aligns and what you can strengthen.</p></div>
+        <section class="results" id="results" aria-live="polite" hidden></section>
+        <div class="page-actions"><a class="secondary-button" data-route="/" href="/">← Edit resume or role</a></div>
+      </section>
+      <section class="app-page" id="tailored-page" hidden>
+        <div class="page-heading"><div class="eyebrow"><span></span> STEP 3 OF 3</div><h1>Make it<br><em>your next move.</em></h1><p class="lead">Your job-matched resume draft is ready. Review it carefully, edit anything that needs correction, then copy or download it.</p></div>
+        <section class="form-card tailored-page-card">
+          <div class="tailored-heading"><div><h2>Your tailored resume draft</h2><p id="tailored-score-note">Built around the role you selected. Check every detail before using it.</p></div><div class="draft-actions"><button type="button" id="copy-draft" class="secondary-button">Copy</button><button type="button" id="download-draft" class="secondary-button">Download .txt</button></div></div>
+          <textarea id="tailored-draft" rows="26" aria-label="Editable tailored resume draft" placeholder="Your tailored resume will appear here."></textarea>
+        </section>
+        <div class="page-actions"><a class="secondary-button" data-route="/analysis" href="/analysis">← Back to match analysis</a></div>
+      </section>
+      <footer>Made for your next chapter <span>✳</span></footer>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+  <script type="module" src="/auth.js"></script>
+</body>
+</html>
