@@ -35,3 +35,17 @@ The project is prepared for source deployment with `gcloud run deploy --source .
 The server limits each Firebase user to 5 requests per minute and 30 per hour, with a 100-request hourly cap per running instance. Keeping Cloud Run at one instance makes the in-memory caps apply across this early deployment; use a shared rate-limit store before scaling out. The `/api/analyze` and `/api/tailor` routes require authentication. `.env` and `sources/` are excluded from Git and Cloud Run source uploads.
 
 Resume text is stored in the current browser tab's session storage to support navigation between workflow pages, and is sent to Gemini when analysis or tailoring is requested. Publish an appropriate privacy notice before opening the app to other users.
+
+## Deploy to Vercel
+
+The repository includes a Vercel serverless adapter in `api/index.js` and routing/security settings in `vercel.json`. Import the GitHub repository into Vercel and add these environment variables in **Project Settings → Environment Variables** for Production (and Preview if you want preview deployments to work):
+
+- `GEMINI_API_KEY` — add the secret value in Vercel's dashboard; do not put it in source code or a `NEXT_PUBLIC_` variable.
+- `GEMINI_MODEL` — optional; defaults to `gemini-3.6-flash`.
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_APP_ID`
+- `NODE_ENV=production`
+
+Deploy, then add the Vercel production hostname to Firebase Authentication → Settings → Authorized domains. The Gemini key stays in the serverless function environment. Vercel verifies Firebase sign-in through Firebase's account lookup endpoint and does not need a Firebase service-account key. The Vercel Hobby plan limits function request bodies to 4.5 MB, so this deployment accepts resume files up to 3 MB. Gemini requests have a 55-second timeout to fit the function limit. The app's in-memory usage caps are per function instance on Vercel and should not be treated as a hard global spending limit.

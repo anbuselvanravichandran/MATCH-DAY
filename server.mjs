@@ -8,7 +8,7 @@ import { getAuth } from 'firebase-admin/auth';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 3000);
 const model = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-const maxBody = 12 * 1024 * 1024;
+const maxBody = 4 * 1024 * 1024;
 const requestWindows = new Map();
 let globalWindow = { startedAt: Date.now(), count: 0 };
 let lastWindowCleanup = 0;
@@ -69,7 +69,7 @@ async function readJson(req) {
   let raw = '';
   for await (const chunk of req) {
     raw += chunk;
-    if (raw.length > maxBody) throw Object.assign(new Error('Request is too large. Keep files under 8 MB.'), { status: 413 });
+    if (raw.length > maxBody) throw Object.assign(new Error('Request is too large. Keep PDF files under 3 MB.'), { status: 413 });
   }
   try { return JSON.parse(raw); }
   catch { throw Object.assign(new Error('The request could not be read.'), { status: 400 }); }
@@ -86,7 +86,7 @@ async function geminiRequest(parts, res, { json = false } = {}) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
       body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { ...(json ? { responseMimeType: 'application/json' } : {}), temperature: 0.2 } }),
-      signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(process.env.VERCEL ? 55000 : 90000),
     });
     const payload = await upstream.json().catch(() => ({}));
     if (!upstream.ok) {
@@ -111,7 +111,7 @@ function getResumeParts(body) {
 function validateResumeInput({ resumeText, jobDescription, pdf }, res) {
   if (!jobDescription) { send(res, 400, { error: 'Add the job description to continue.' }); return false; }
   if (!resumeText && !pdf) { send(res, 400, { error: 'Paste resume text or upload a PDF.' }); return false; }
-  if (resumeText.length > 60000 || jobDescription.length > 30000 || (pdf && pdf.data.length > 11 * 1024 * 1024)) {
+  if (resumeText.length > 60000 || jobDescription.length > 30000 || (pdf && pdf.data.length > 4 * 1024 * 1024)) {
     send(res, 413, { error: 'The input is too large. Shorten it or choose a smaller file.' }); return false;
   }
   return true;
@@ -133,7 +133,9 @@ async function requireFirebaseUser(req, res) {
     send(res, 401, { error: 'Please sign in again to continue.' });
     return null;
   }
-  if (process.env.NODE_ENV === 'production') {
+  // Vercel does not provide Google Application Default Credentials. Verify its
+  // Firebase ID tokens through Firebase's account lookup endpoint instead.
+  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
     if (!process.env.FIREBASE_PROJECT_ID) {
       send(res, 503, { error: 'Firebase server verification is not configured.' });
       return null;
@@ -232,7 +234,7 @@ ${input.jobDescription}` }];
   return send(res, 200, { draft: draft.trim() });
 }
 
-createServer(async (req, res) => {
+export async function handleRequest(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (req.method === 'GET' && url.pathname === '/api/firebase-config') {
     const config = firebaseWebConfig();
@@ -253,4 +255,10 @@ createServer(async (req, res) => {
     res.writeHead(200, headers);
     res.end(req.method === 'HEAD' ? undefined : content);
   } catch { send(res, 404, 'Not found.', 'text/plain; charset=utf-8'); }
-}).listen(port, () => console.log(`Resume analysis system running at http://localhost:${port}`));
+}
+
+if (process.env.VERCEL) {
+  // Vercel imports this module through api/index.js; it must not start a server.
+} else {
+  createServer(handleRequest).listen(port, () => console.log(`Resume analysis system running at http://localhost:${port}`));
+}

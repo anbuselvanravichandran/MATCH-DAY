@@ -65,7 +65,7 @@ function setFile(file) {
   if (!['application/pdf', 'text/plain'].includes(file.type) && !/\.(pdf|txt)$/i.test(file.name)) {
     showError('Choose a PDF or TXT file.'); return;
   }
-  if (file.size > 8 * 1024 * 1024) { showError('That file is over 8 MB. Choose a smaller resume.'); return; }
+  if (file.size > 3 * 1024 * 1024) { showError('That file is over 3 MB. Vercel limits uploads, so choose a smaller resume.'); return; }
   invalidateResults();
   selectedFile = file;
   document.querySelector('#file-title').textContent = file.name;
